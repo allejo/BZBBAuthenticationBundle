@@ -5,7 +5,7 @@ namespace allejo\BZBBAuthenticationBundle\Security;
 use allejo\BZBBAuthenticationBundle\Entity\User;
 use allejo\BZBBAuthenticationBundle\Event\BZBBNewUserEvent;
 use allejo\BZBBAuthenticationBundle\Event\BZBBUserLoginEvent;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Router;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
@@ -24,7 +25,7 @@ use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticato
 class BZBBAuthenticator extends AbstractFormLoginAuthenticator
 {
     /**
-     * @var EntityManager
+     * @var EntityManagerInterface
      */
     protected $entityManager;
 
@@ -63,12 +64,15 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
     /**
      * Create new BZDBAuthenticator.
      *
-     * @param EntityManager   $entityManager The doctrine entity manager
-     * @param Router          $router        The Symfony router
-     * @param string[]|string $groups        The accepted BZFlag groups
-     * @param string          $debug         Whether the kernel is on debug mode
+     * @param EntityManagerInterface   $entityManager The doctrine entity manager
+     * @param Router                   $router        The Symfony router
+     * @param EventDispatcherInterface $dispatcher
+     * @param string[]|string          $groups        The accepted BZFlag groups
+     * @param string                   $debug         Whether the kernel is on debug mode
+     * @param string                   $loginRoute
+     * @param string                   $successRoute
      */
-    public function __construct(EntityManager $entityManager, Router $router, EventDispatcherInterface $dispatcher, $groups, $debug, $loginRoute, $successRoute)
+    public function __construct(EntityManagerInterface $entityManager, Router $router, EventDispatcherInterface $dispatcher, $groups, $debug, $loginRoute, $successRoute)
     {
         $this->entityManager = $entityManager;
         $this->router        = $router;
@@ -122,18 +126,27 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
             }
         }
 
-        // if null, authentication will fail
-        // if a User object, checkCredentials() is called
         $bzid = $bzData['bzid'];
-        $user = $this->entityManager
-            ->getRepository('BZBBAuthenticationBundle:User')
-            ->findOneBy([
-                'bzid' => $bzid
-            ])
-        ;
 
-        if (!$user) {
-            $user = new User();
+        try
+        {
+            // Try getting an existing user. A UsernameNotFoundException will be thrown if the user doesn't have a
+            // registered account.
+            $user = $userProvider->loadUserByUsername($bzid);
+        }
+        catch (UsernameNotFoundException $e)
+        {
+            // A nasty hack to get the correct User class being used by Doctrine
+            // @todo Is there a correct way of doing this?
+            $reflector = new \ReflectionObject($userProvider);
+            $method = $reflector->getMethod('getClass');
+            $method->setAccessible(true);
+
+            $class = $method->invoke($userProvider);
+
+            // Create a new user object with the correct object type currently being used by Doctrine
+            /** @var User $user */
+            $user = new $class;
             $user->setBzid($bzid);
 
             $newUserEvent = new BZBBNewUserEvent($user);
@@ -320,8 +333,6 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
 
     /**
      * Get the respective URL for an authentication request from BZFlag.
-     *
-     * @param string $redirect
      *
      * @return string A non-escaped URL used for requesting auth from the BZBB
      */

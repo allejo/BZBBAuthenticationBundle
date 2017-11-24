@@ -10,22 +10,17 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class User implements UserInterface
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    protected $id;
 
     /**
      * @ORM\Column(type="string", nullable=false)
      */
-    private $bzid;
+    protected $bzid;
 
     /**
      * @ORM\Column(type="string", nullable=false)
      */
-    private $callsign;
+    protected $callsign;
 
     /**
      * @return int
