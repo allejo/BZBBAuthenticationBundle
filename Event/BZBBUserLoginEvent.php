@@ -2,9 +2,10 @@
 
 namespace allejo\BZBBAuthenticationBundle\Event;
 
+use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class BZBBUserLoginEvent
+class BZBBUserLoginEvent extends Event
 {
     const NAME = 'bzbb.auth.user_login';
 
