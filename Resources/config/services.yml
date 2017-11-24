@@ -3,6 +3,7 @@ services:
         arguments:
             - "@doctrine.orm.entity_manager"
             - "@router"
+            - '@event_dispatcher'
             - '%bzbb_authentication.groups%'
             - "%kernel.debug%"
             - '%bzbb_authentication.routes.login_route%'

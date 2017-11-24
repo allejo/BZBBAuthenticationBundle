@@ -3,7 +3,10 @@
 namespace allejo\BZBBAuthenticationBundle\Security;
 
 use allejo\BZBBAuthenticationBundle\Entity\User;
+use allejo\BZBBAuthenticationBundle\Event\BZBBNewUserEvent;
+use allejo\BZBBAuthenticationBundle\Event\BZBBUserLoginEvent;
 use Doctrine\ORM\EntityManager;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -53,6 +56,11 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
     private $successRoute;
 
     /**
+     * @var EventDispatcherInterface
+     */
+    private $dispatcher;
+
+    /**
      * Create new BZDBAuthenticator.
      *
      * @param EntityManager   $entityManager The doctrine entity manager
@@ -60,13 +68,14 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
      * @param string[]|string $groups        The accepted BZFlag groups
      * @param string          $debug         Whether the kernel is on debug mode
      */
-    public function __construct(EntityManager $entityManager, Router $router, $groups, $debug, $loginRoute, $successRoute)
+    public function __construct(EntityManager $entityManager, Router $router, EventDispatcherInterface $dispatcher, $groups, $debug, $loginRoute, $successRoute)
     {
         $this->entityManager = $entityManager;
         $this->router        = $router;
         $this->debug         = $debug;
         $this->loginRoute    = $loginRoute;
         $this->successRoute  = $successRoute;
+        $this->dispatcher    = $dispatcher;
 
         if (empty($groups)) {
             $this->groups = $groups;
@@ -118,15 +127,24 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
         $bzid = $bzData['bzid'];
         $user = $this->entityManager
             ->getRepository('BZBBAuthenticationBundle:User')
-            ->findOneByBzid($bzid)
+            ->findOneBy([
+                'bzid' => $bzid
+            ])
         ;
 
         if (!$user) {
             $user = new User();
             $user->setBzid($bzid);
+
+            $newUserEvent = new BZBBNewUserEvent($user);
+            $this->dispatcher->dispatch(BZBBNewUserEvent::NAME, $newUserEvent);
         }
 
         $user->setCallsign($bzData['username']);
+
+        $userLoginEvent = new BZBBUserLoginEvent($user);
+        $this->dispatcher->dispatch(BZBBUserLoginEvent::NAME, $userLoginEvent);
+
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 

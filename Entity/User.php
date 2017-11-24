@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @ORM\MappedSuperclass(repositoryClass="allejo\BZBBAuthenticationBundle\Repository\UserRepository")
+ * @ORM\MappedSuperclass()
  */
 class User implements UserInterface
 {
