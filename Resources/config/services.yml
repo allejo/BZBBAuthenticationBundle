@@ -1,0 +1,12 @@
+services:
+    allejo\BZBBAuthenticationBundle\Security\BZBBAuthenticator:
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@router"
+            - '%bzbb_authentication.groups%'
+            - "%kernel.debug%"
+            - '%bzbb_authentication.routes.login_route%'
+            - '%bzbb_authentication.routes.success_route%'
+
+    bzbb_authenticator:
+        alias: allejo\BZBBAuthenticationBundle\Security\BZBBAuthenticator

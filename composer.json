@@ -1,0 +1,13 @@
+{
+    "name": "allejo/bzbb-authentication-bundle",
+    "description": "A Symfony bundle adding authentication with the BZFlag forums",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vladimir Jimenez",
+            "email": "allejo@me.com"
+        }
+    ],
+    "require": {}
+}
