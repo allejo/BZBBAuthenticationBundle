@@ -36,7 +36,7 @@ firewalls:
 
 In your `config.yml`, you'll need to configure a few things as well.
 
-```
+```yaml
 bzbb_authentication:
     routes:
         login_route: 'login'
