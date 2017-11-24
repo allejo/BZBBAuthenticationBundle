@@ -8,6 +8,20 @@ This is a Symfony bundle to ease the process of using [BZFlag's web login](https
 composer require allejo/bzbb-authentication-bundle
 ```
 
+Load the bundle to your `AppKernel.php`.
+
+```php
+public function registerBundles()
+{
+    $bundles = [
+        // ...
+        new allejo\BZBBAuthenticationBundle\BZBBAuthenticationBundle(),
+    ];
+    
+    // ...
+}
+``` 
+
 ## Usage
 
 In your `security.yml`, create a provider with the entity provided by this bundle. Or make your own entity which extends this bundle's Entity.

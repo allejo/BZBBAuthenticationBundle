@@ -2,6 +2,7 @@
     "name": "allejo/bzbb-authentication-bundle",
     "description": "A Symfony bundle adding authentication with the BZFlag forums",
     "type": "symfony-bundle",
+    "keywords": ["bzflag"],
     "license": "MIT",
     "authors": [
         {
@@ -13,5 +14,10 @@
             "email": "kongr45gpen@helit.org"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "allejo\\BZBBAuthenticationBundle\\": ""
+        }
+    }
 }
