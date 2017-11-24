@@ -6,7 +6,11 @@
     "authors": [
         {
             "name": "Vladimir Jimenez",
-            "email": "allejo@me.com"
+            "email": "me@allejo.io"
+        },
+        {
+            "name": "kongr45gpen",
+            "email": "kongr45gpen@helit.org"
         }
     ],
     "require": {}

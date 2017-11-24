@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
 
 /**
- * @author kongr45gpen <electrovesta@gmail.com>
+ * @author kongr45gpen <kongr45gpen@helit.org>
  * @link https://github.com/kongr45gpen/bz-survey/blob/master/src/AppBundle/Security/BZDBAuthenticator.php
  */
 class BZBBAuthenticator extends AbstractFormLoginAuthenticator
