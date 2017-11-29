@@ -15,6 +15,7 @@ class BZBBAuthenticationExtension extends Extension
 
         $config = $this->processConfiguration($configuration, $configs);
 
+        $container->setParameter('bzbb_authentication.user_class', $config['user_class']);
         $container->setParameter('bzbb_authentication.routes.login_route', $config['routes']['login_route']);
         $container->setParameter('bzbb_authentication.routes.success_route', $config['routes']['success_route']);
         $container->setParameter('bzbb_authentication.groups', $config['groups']);

@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Router;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
@@ -62,27 +63,42 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
     private $dispatcher;
 
     /**
+     * @var string
+     */
+    private $userClass;
+
+    /**
      * Create new BZDBAuthenticator.
      *
      * @param EntityManagerInterface   $entityManager The doctrine entity manager
-     * @param Router                   $router        The Symfony router
+     * @param RouterInterface          $router        The Symfony router
      * @param EventDispatcherInterface $dispatcher
      * @param string[]|string          $groups        The accepted BZFlag groups
      * @param string                   $debug         Whether the kernel is on debug mode
      * @param string                   $loginRoute
      * @param string                   $successRoute
+     * @param string                   $userClass     The fully qualified class name (FQCN) of the app's user entity
      */
-    public function __construct(EntityManagerInterface $entityManager, Router $router, EventDispatcherInterface $dispatcher, $groups, $debug, $loginRoute, $successRoute)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        RouterInterface $router,
+        EventDispatcherInterface $dispatcher,
+        $groups,
+        $debug,
+        $loginRoute,
+        $successRoute,
+        $userClass
+    ) {
         $this->entityManager = $entityManager;
         $this->router        = $router;
         $this->debug         = $debug;
         $this->loginRoute    = $loginRoute;
         $this->successRoute  = $successRoute;
         $this->dispatcher    = $dispatcher;
+        $this->userClass     = $userClass;
 
         if (empty($groups)) {
-            $this->groups = $groups;
+            $this->groups = array();
         } else {
             $this->groups = is_array($groups) ? $groups : array($groups);
         }
@@ -136,17 +152,9 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
         }
         catch (UsernameNotFoundException $e)
         {
-            // A nasty hack to get the correct User class being used by Doctrine
-            // @todo Is there a correct way of doing this?
-            $reflector = new \ReflectionObject($userProvider);
-            $method = $reflector->getMethod('getClass');
-            $method->setAccessible(true);
-
-            $class = $method->invoke($userProvider);
-
-            // Create a new user object with the correct object type currently being used by Doctrine
+            // Create a new user object that'll be persisted to the database
             /** @var User $user */
-            $user = new $class;
+            $user = new $this->userClass;
             $user->setBzid($bzid);
 
             $newUserEvent = new BZBBNewUserEvent($user);

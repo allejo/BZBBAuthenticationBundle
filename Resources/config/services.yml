@@ -8,6 +8,7 @@ services:
             - "%kernel.debug%"
             - '%bzbb_authentication.routes.login_route%'
             - '%bzbb_authentication.routes.success_route%'
+            - '%bzbb_authentication.user_class%'
 
     bzbb_authenticator:
         alias: allejo\BZBBAuthenticationBundle\Security\BZBBAuthenticator

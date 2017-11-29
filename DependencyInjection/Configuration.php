@@ -14,6 +14,7 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->scalarNode('user_class')->cannotBeEmpty()->end()
                 ->arrayNode('routes')
                     ->children()
                         ->scalarNode('login_route')->cannotBeEmpty()->end()
