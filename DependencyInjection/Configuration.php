@@ -21,7 +21,11 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('success_route')->cannotBeEmpty()->end()
                     ->end()
                 ->end() // routes
-                ->arrayNode('groups')->isRequired()->end()
+                ->arrayNode('groups')
+                    ->treatNullLike(array())
+                    ->prototype('scalar')->end()
+                    ->defaultValue(array())
+                ->end()
             ->end()
         ;
 
