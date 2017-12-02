@@ -40,7 +40,7 @@ the ``BZBBNewUserEvent``, since they have just logged in.
 
 .. code-block:: php
 
-    public function onNewUserEvent(BZBBNewUserEvent $event)
+    public function onUserLoginEvent(BZBBUserLoginEvent $event)
     {
         $user = $event->getUser();
 
