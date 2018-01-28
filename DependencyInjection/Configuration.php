@@ -22,9 +22,9 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end() // routes
                 ->arrayNode('groups')
-                    ->treatNullLike(array())
+                    ->treatNullLike([])
                     ->prototype('scalar')->end()
-                    ->defaultValue(array())
+                    ->defaultValue([])
                 ->end()
             ->end()
         ;

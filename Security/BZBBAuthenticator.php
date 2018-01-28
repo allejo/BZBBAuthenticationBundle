@@ -21,7 +21,8 @@ use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticato
 
 /**
  * @author kongr45gpen <kongr45gpen@helit.org>
- * @link https://github.com/kongr45gpen/bz-survey/blob/master/src/AppBundle/Security/BZDBAuthenticator.php
+ *
+ * @see https://github.com/kongr45gpen/bz-survey/blob/master/src/AppBundle/Security/BZDBAuthenticator.php
  */
 class BZBBAuthenticator extends AbstractFormLoginAuthenticator
 {
@@ -90,17 +91,17 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
         $userClass
     ) {
         $this->entityManager = $entityManager;
-        $this->router        = $router;
-        $this->debug         = $debug;
-        $this->loginRoute    = $loginRoute;
-        $this->successRoute  = $successRoute;
-        $this->dispatcher    = $dispatcher;
-        $this->userClass     = $userClass;
+        $this->router = $router;
+        $this->debug = $debug;
+        $this->loginRoute = $loginRoute;
+        $this->successRoute = $successRoute;
+        $this->dispatcher = $dispatcher;
+        $this->userClass = $userClass;
 
         if (empty($groups)) {
-            $this->groups = array();
+            $this->groups = [];
         } else {
-            $this->groups = is_array($groups) ? $groups : array($groups);
+            $this->groups = is_array($groups) ? $groups : [$groups];
         }
     }
 
@@ -109,7 +110,7 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
      */
     public function supports(Request $request)
     {
-        return ($request->query->get('username') && $request->query->get('token'));
+        return $request->query->get('username') && $request->query->get('token');
     }
 
     /**
@@ -118,12 +119,12 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
     public function getCredentials(Request $request)
     {
         $username = $request->query->get('username');
-        $token    = $request->query->get('token');
+        $token = $request->query->get('token');
 
-        return array(
+        return [
             'username' => $username,
-            'token' => $token
-        );
+            'token' => $token,
+        ];
     }
 
     /**
@@ -134,7 +135,7 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
         $bzData = $this->validateToken($credentials['token'], $credentials['username'], $this->groups, !$this->debug);
 
         if (!$bzData) {
-            throw new BadCredentialsException("The authentication token provided is invalid");
+            throw new BadCredentialsException('The authentication token provided is invalid');
         }
 
         if ($this->groups && !empty($this->groups)) {
@@ -148,17 +149,14 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
 
         $bzid = $bzData['bzid'];
 
-        try
-        {
+        try {
             // Try getting an existing user. A UsernameNotFoundException will be thrown if the user doesn't have a
             // registered account.
             $user = $userProvider->loadUserByUsername($bzid);
-        }
-        catch (UsernameNotFoundException $e)
-        {
+        } catch (UsernameNotFoundException $e) {
             // Create a new user object that'll be persisted to the database
             /** @var User $user */
-            $user = new $this->userClass;
+            $user = new $this->userClass();
             $user->setBzid($bzid);
 
             $newUserEvent = new BZBBNewUserEvent($user);
@@ -269,29 +267,31 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
      * @param string[] $groups
      * @param bool     $checkIP
      *
-     * @link https://github.com/BZFlag-Dev/bzflag/blob/2.4/misc/checkToken.php
+     * @see https://github.com/BZFlag-Dev/bzflag/blob/2.4/misc/checkToken.php
      *
      * @return array
      */
-    private function validateToken($token, $username, $groups = array(), $checkIP = true)
+    private function validateToken($token, $username, $groups = [], $checkIP = true)
     {
         // We should probably do a little more error checking here and
         // provide an error return code (define constants?)
-        if (isset($token, $username) && strlen($token) > 0 && strlen($username) > 0)
-        {
-            $listserver = Array();
+        if (isset($token, $username) && strlen($token) > 0 && strlen($username) > 0) {
+            $listserver = [];
 
             // First off, start with the base URL
             $listserver['url'] = 'http://my.bzflag.org/db/';
             // Add on the action and the username
-            $listserver['url'] .= '?action=CHECKTOKENS&checktokens='.urlencode($username);
+            $listserver['url'] .= '?action=CHECKTOKENS&checktokens=' . urlencode($username);
             // Make sure we match the IP address of the user
-            if ($checkIP) $listserver['url'] .= '@'.$_SERVER['REMOTE_ADDR'];
+            if ($checkIP) {
+                $listserver['url'] .= '@' . $_SERVER['REMOTE_ADDR'];
+            }
             // Add the token
-            $listserver['url'] .= '%3D'.$token;
+            $listserver['url'] .= '%3D' . $token;
             // If use have groups to check, add those now
-            if (is_array($groups) && sizeof($groups) > 0)
-                $listserver['url'] .= '&groups='.implode("%0D%0A", $groups);
+            if (is_array($groups) && sizeof($groups) > 0) {
+                $listserver['url'] .= '&groups=' . implode('%0D%0A', $groups);
+            }
 
             // Run the web query and trim the result
             // An alternative to this method would be to use cURL
@@ -310,32 +310,26 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
             $listserver['reply'] = explode("\n", $listserver['reply']);
 
             // Grab the groups they are in, and their BZID
-            foreach ($listserver['reply'] as $line)
-            {
-                if (substr($line, 0, strlen('TOKGOOD: ')) == 'TOKGOOD: ')
-                {
-                    if (strpos($line, ':', strlen('TOKGOOD: ')) == FALSE) continue;
-                    $listserver['groups'] = explode(':', substr($line, strpos($line, ':', strlen('TOKGOOD: '))+1 ));
-                }
-                else if (substr($line, 0, strlen('BZID: ')) == 'BZID: ')
-                {
-                    list($listserver['bzid'],$listserver['username']) = explode(' ', substr($line, strlen('BZID: ')), 2);
+            foreach ($listserver['reply'] as $line) {
+                if (substr($line, 0, strlen('TOKGOOD: ')) == 'TOKGOOD: ') {
+                    if (strpos($line, ':', strlen('TOKGOOD: ')) == false) {
+                        continue;
+                    }
+                    $listserver['groups'] = explode(':', substr($line, strpos($line, ':', strlen('TOKGOOD: ')) + 1));
+                } elseif (substr($line, 0, strlen('BZID: ')) == 'BZID: ') {
+                    list($listserver['bzid'], $listserver['username']) = explode(' ', substr($line, strlen('BZID: ')), 2);
                 }
             }
 
-            $return = array();
-            if (isset($listserver['bzid']) && is_numeric($listserver['bzid']))
-            {
+            $return = [];
+            if (isset($listserver['bzid']) && is_numeric($listserver['bzid'])) {
                 $return['username'] = $listserver['username'];
                 $return['bzid'] = $listserver['bzid'];
 
-                if (isset($listserver['groups']) && sizeof($listserver['groups']) > 0)
-                {
+                if (isset($listserver['groups']) && sizeof($listserver['groups']) > 0) {
                     $return['groups'] = $listserver['groups'];
-                }
-                else
-                {
-                    $return['groups'] = Array();
+                } else {
+                    $return['groups'] = [];
                 }
 
                 return $return;
@@ -352,6 +346,6 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
     {
         $url = urlencode("{$this->getDefaultSuccessRedirectUrl()}?token=%TOKEN%&username=%USERNAME%");
 
-        return "https://my.bzflag.org/weblogin.php?action=weblogin&url=" . $url;
+        return 'https://my.bzflag.org/weblogin.php?action=weblogin&url=' . $url;
     }
 }
