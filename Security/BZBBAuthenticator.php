@@ -107,14 +107,18 @@ class BZBBAuthenticator extends AbstractFormLoginAuthenticator
     /**
      * {@inheritdoc}
      */
+    public function supports(Request $request)
+    {
+        return ($request->query->get('username') && $request->query->get('token'));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getCredentials(Request $request)
     {
         $username = $request->query->get('username');
         $token    = $request->query->get('token');
-
-        if (!$username || !$token) {
-            return null;
-        }
 
         return array(
             'username' => $username,
